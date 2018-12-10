@@ -1,27 +1,29 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isEqual = isEqual;
-
-function isEqual(a, b) {
-  if (a === b) return true;
-  if (typeof a == "number" && typeof b == "number") return isNaN(a) && isNaN(b);
-  if (Array.isArray(a) && Array.isArray(b) && a.length == b.length)
-    return a.every(function(e, i) {
-      return isEqual(e, b[i]);
-    });
-  if (
-    a /* a is not null */ &&
-    b /* b is not null */ &&
-    typeof a == "object" /* a is an object */ &&
-    typeof b == "object" /* b is an object */ &&
-    a.toString() == b.toString() /* a, b have same string representation */
-  ) {
-    if (a.toString() == "[object Date]") return +a == +b; // convert Dates to ms
-    return (
-      Object.keys(a).length == Object.keys(b).length &&
-      Object.keys(a).every(k => isEqual(a[k], b[k]))
-    );
+exports.unique = (function() {
+  function isReferentiallyEqual(a, b) {
+    return a === b;
   }
-  return false;
-}
+
+  function toArray(array) {
+    return Array.isArray(array) ? array : [];
+  }
+
+  function deduplicate(comparator, uniques, value) {
+    if (
+      !uniques.some(
+        (typeof comparator == "function"
+          ? comparator
+          : isReferentiallyEqual).bind(null, value)
+      )
+    ) {
+      uniques.push(value);
+    }
+    return uniques;
+  }
+
+  return function unique(array, comparator) {
+    return toArray(array).reduce(deduplicate.bind(null, comparator), []);
+  };
+})();
